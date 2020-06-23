@@ -549,7 +549,7 @@ export default class Auth0Client {
       client_id: this.options.client_id
     });
 
-    if (!cache.refresh_token) {
+    if (!cache || !cache.refresh_token) {
       return;
     }
 
