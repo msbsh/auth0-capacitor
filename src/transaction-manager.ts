@@ -27,10 +27,10 @@ export default class TransactionManager {
     const cookieKeys = keys.filter(k => k.startsWith(COOKIE_KEY));
 
     if (typeof window !== 'undefined') {
-      for (let key in cookieKeys) {
+      cookieKeys.forEach(async key => {
         const state = key.replace(COOKIE_KEY, '');
         this.transactions[state] = await ClientStorage.get<Transaction>(key);
-      }
+      });
     }
   }
 

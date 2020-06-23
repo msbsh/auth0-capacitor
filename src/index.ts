@@ -16,7 +16,9 @@ import './global';
 export * from './global';
 
 export default async function createAuth0Client(options: Auth0ClientOptions) {
-  return new Auth0Client(options);
+  const auth0 = new Auth0Client(options);
+  await auth0.checkSession();
+  return auth0;
 }
 
 export { Auth0Client };
