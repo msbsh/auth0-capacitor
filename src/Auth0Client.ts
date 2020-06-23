@@ -506,14 +506,19 @@ export default class Auth0Client {
    *
    * @param options
    */
-  public async logout(options: LogoutOptions = {}) {
+  public async logout(options: LogoutOptions = {}): Promise<string> {
     if (options.client_id !== null) {
       options.client_id = options.client_id || this.options.client_id;
     } else {
       delete options.client_id;
     }
 
-    const { federated, localOnly, ...logoutOptions } = options;
+    const {
+      federated,
+      localOnly,
+      logoutFromNative,
+      ...logoutOptions
+    } = options;
 
     if (localOnly && federated) {
       throw new Error(
@@ -525,13 +530,19 @@ export default class Auth0Client {
     await ClientStorage.remove('auth0.is.authenticated');
 
     if (localOnly) {
-      return;
+      return null;
     }
 
     const federatedQuery = federated ? `&federated` : '';
     const url = this._url(`/v2/logout?${createQueryParams(logoutOptions)}`);
 
-    window.location.assign(`${url}${federatedQuery}`);
+    const logoutUrl = `${url}${federatedQuery}`;
+    if (logoutFromNative) {
+      return logoutUrl;
+    } else {
+      window.location.assign(logoutUrl);
+      return null;
+    }
   }
 
   private async _getTokenUsingRefreshToken(

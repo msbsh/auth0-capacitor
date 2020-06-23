@@ -307,6 +307,11 @@ export interface LogoutOptions {
    * This option cannot be specified along with the `federated` option.
    */
   localOnly?: boolean;
+
+  /**
+   * When `true` does not call window.location.assign but rather returns logout url
+   */
+  logoutFromNative?: boolean;
 }
 
 /**
