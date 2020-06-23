@@ -139,7 +139,7 @@ export interface Auth0ClientOptions extends BaseLoginOptions {
 /**
  * The possible locations where tokens can be stored
  */
-export type CacheLocation = 'memory' | 'localstorage';
+export type CacheLocation = 'ionic';
 
 /**
  * @ignore

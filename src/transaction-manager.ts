@@ -15,28 +15,36 @@ interface Transactions {
   [key: string]: Transaction;
 }
 export default class TransactionManager {
-  private transactions: Transactions;
+  private readonly transactions: Transactions;
+
   constructor() {
     this.transactions = {};
-    typeof window !== 'undefined' &&
-      ClientStorage.getAllKeys()
-        .filter(k => k.startsWith(COOKIE_KEY))
-        .forEach(k => {
-          const state = k.replace(COOKIE_KEY, '');
-          this.transactions[state] = ClientStorage.get<Transaction>(k);
-        });
+    this.init();
   }
-  public create(state: string, transaction: Transaction) {
+
+  public async init() {
+    const keys = await ClientStorage.getAllKeys();
+    const cookieKeys = keys.filter(k => k.startsWith(COOKIE_KEY));
+
+    if (typeof window !== 'undefined') {
+      for (let key in cookieKeys) {
+        const state = key.replace(COOKIE_KEY, '');
+        this.transactions[state] = await ClientStorage.get<Transaction>(key);
+      }
+    }
+  }
+
+  public async create(state: string, transaction: Transaction) {
     this.transactions[state] = transaction;
-    ClientStorage.save(getTransactionKey(state), transaction, {
-      daysUntilExpire: 1
-    });
+    await ClientStorage.save(getTransactionKey(state), transaction);
   }
+
   public get(state: string): Transaction {
     return this.transactions[state];
   }
-  public remove(state: string) {
+
+  public async remove(state: string) {
     delete this.transactions[state];
-    ClientStorage.remove(getTransactionKey(state));
+    await ClientStorage.remove(getTransactionKey(state));
   }
 }

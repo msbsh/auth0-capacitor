@@ -27,8 +27,7 @@ export const CLEANUP_IFRAME_TIMEOUT_IN_SECONDS = 2;
  */
 export const DEFAULT_FETCH_TIMEOUT_MS = 10000;
 
-export const CACHE_LOCATION_MEMORY = 'memory';
-export const CACHE_LOCATION_LOCAL_STORAGE = 'localstorage';
+export const CACHE_LOCATION_IONIC = 'ionic';
 export const MISSING_REFRESH_TOKEN_ERROR_MESSAGE =
   'The web worker is missing the refresh token';
 

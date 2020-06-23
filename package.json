@@ -1,9 +1,9 @@
 {
-  "author": "Auth0",
-  "name": "@auth0/auth0-spa-js",
-  "description": "Auth0 SDK for Single Page Applications using Authorization Code Grant Flow with PKCE",
+  "author": "Martin James",
+  "name": "@wizzn/auth0-capacitor",
+  "description": "Auth0 SDK for capacitor ionic applications using Authorization Code Grant Flow with PKCE",
   "license": "MIT",
-  "version": "1.10.0",
+  "version": "1.0.0-beta.2",
   "main": "dist/lib/auth0-spa-js.cjs.js",
   "types": "dist/typings/index.d.ts",
   "module": "dist/auth0-spa-js.production.esm.js",
@@ -14,7 +14,6 @@
     "build": "rimraf dist && rollup -m -c --environment NODE_ENV:production && npm run test:es-check",
     "build:stats": "npm run build -- --environment WITH_STATS:true && open stats.html",
     "lint:security": "eslint ./src --ext ts --no-eslintrc --config ./.eslintrc.security",
-    "test": "jest --coverage",
     "test:watch": "jest --coverage --watch",
     "test:watch:integration": "concurrently --raw npm:dev 'cypress open'",
     "test:es-check": "npm run test:es-check:es5 && npm run test:es-check:es2015:module",
@@ -26,11 +25,9 @@
     "print-bundle-size": "node ./scripts/print-bundle-size",
     "prepack": "npm run build && npm run test && node ./scripts/prepack",
     "release": "node ./scripts/release",
-    "release:clean": "node ./scripts/cleanup",
-    "publish:cdn": "ccu --trace"
+    "release:clean": "node ./scripts/cleanup"
   },
   "devDependencies": {
-    "@auth0/component-cdn-uploader": "github:auth0/component-cdn-uploader#v2.2.2",
     "@rollup/plugin-replace": "^2.3.1",
     "@types/cypress": "^1.1.3",
     "@types/jest": "^24.9.1",
@@ -70,7 +67,13 @@
     "typescript": "^3.8.3",
     "wait-on": "^4.0.1"
   },
+  "peerDependencies": {
+    "@capacitor/core": "^2.2.0",
+    "@ionic/storage": "^2.2.0"
+  },
   "dependencies": {
+    "@capacitor/core": "^2.2.0",
+    "@ionic/storage": "^2.2.0",
     "abortcontroller-polyfill": "^1.4.0",
     "browser-tabs-lock": "^1.2.8",
     "core-js": "^3.6.4",
@@ -85,35 +88,16 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/auth0/auth0-spa-js.git"
+    "url": "git@github.com:msbsh/auth0-capacitor.git"
   },
-  "bugs": {
-    "url": "https://github.com/auth0/auth0-spa-js/issues"
-  },
-  "homepage": "https://github.com/auth0/auth0-spa-js#readme",
   "keywords": [
     "auth0",
     "login",
     "Authorization Code Grant Flow",
     "PKCE",
-    "Single Page Application authentication",
-    "SPA authentication"
+    "Ionic",
+    "Capacitor"
   ],
-  "ccu": {
-    "name": "auth0-spa-js",
-    "cdn": "https://cdn.auth0.com",
-    "mainBundleFile": "auth0-spa-js.production.js",
-    "bucket": "assets.us.auth0.com",
-    "localPath": "dist",
-    "digest": {
-      "hashes": [
-        "sha384"
-      ],
-      "extensions": [
-        ".js"
-      ]
-    }
-  },
   "husky": {
     "hooks": {
       "pre-commit": "pretty-quick --staged"

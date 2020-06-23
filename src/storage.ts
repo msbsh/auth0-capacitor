@@ -1,33 +1,19 @@
-import * as Cookies from 'es-cookie';
+import { Plugins } from '@capacitor/core';
 
-interface ClientStorageOptions {
-  daysUntilExpire: number;
-}
+const { Storage } = Plugins;
 
-export const getAllKeys = () => Object.keys(Cookies.getAll() || {});
+export const getAllKeys = async () => (await Storage.keys()).keys;
 
-export const get = <T extends Object>(key: string) => {
-  const value = Cookies.get(key);
-  if (typeof value === 'undefined') {
+export const get = async <T extends Object>(key: string) => {
+  const storageSpace = await Storage.get({ key });
+  if (typeof storageSpace === 'undefined') {
     return;
   }
-  return <T>JSON.parse(value);
+  return <T>JSON.parse(storageSpace.value);
 };
-export const save = (
-  key: string,
-  value: any,
-  options: ClientStorageOptions
-) => {
-  let cookieAttributes: Cookies.CookieAttributes = {};
-  if ('https:' === window.location.protocol) {
-    cookieAttributes = {
-      secure: true,
-      sameSite: 'none'
-    };
-  }
-  cookieAttributes.expires = options.daysUntilExpire;
-  Cookies.set(key, JSON.stringify(value), cookieAttributes);
+export const save = async (key: string, value: any) => {
+  await Storage.set({ key, value: JSON.stringify(value) });
 };
-export const remove = (key: string) => {
-  Cookies.remove(key);
+export const remove = async (key: string) => {
+  await Storage.remove({ key });
 };

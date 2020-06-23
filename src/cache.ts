@@ -1,4 +1,7 @@
 import { IdToken } from './global';
+import { Plugins } from '@capacitor/core';
+
+const { Storage } = Plugins;
 
 interface CacheKeyData {
   audience: string;
@@ -23,9 +26,14 @@ interface CacheEntry {
 }
 
 export interface ICache {
-  save(entry: CacheEntry): void;
-  get(key: CacheKeyData, expiryAdjustmentSeconds?: number): Partial<CacheEntry>;
-  clear(): void;
+  save(entry: CacheEntry): Promise<void>;
+
+  get(
+    key: CacheKeyData,
+    expiryAdjustmentSeconds?: number
+  ): Promise<Partial<CacheEntry>>;
+
+  clear(): Promise<void>;
 }
 
 const keyPrefix = '@@auth0spajs@@';
@@ -53,20 +61,20 @@ const wrapCacheEntry = (entry: CacheEntry): CachePayload => {
   };
 };
 
-export class LocalStorageCache implements ICache {
-  public save(entry: CacheEntry): void {
+export class IonicStorage implements ICache {
+  public async save(entry: CacheEntry): Promise<void> {
     const cacheKey = createKey(entry);
     const payload = wrapCacheEntry(entry);
 
-    window.localStorage.setItem(cacheKey, JSON.stringify(payload));
+    await Storage.set({ key: cacheKey, value: JSON.stringify(payload) });
   }
 
-  public get(
+  public async get(
     key: CacheKeyData,
     expiryAdjustmentSeconds = DEFAULT_EXPIRY_ADJUSTMENT_SECONDS
-  ): Partial<CacheEntry> {
+  ): Promise<Partial<CacheEntry>> {
     const cacheKey = createKey(key);
-    const payload = this.readJson(cacheKey);
+    const payload = await this.readJson(cacheKey);
     const nowSeconds = Math.floor(Date.now() / 1000);
 
     if (!payload) return;
@@ -74,45 +82,39 @@ export class LocalStorageCache implements ICache {
     if (payload.expiresAt - expiryAdjustmentSeconds < nowSeconds) {
       if (payload.body.refresh_token) {
         const newPayload = this.stripData(payload);
-        this.writeJson(cacheKey, newPayload);
+        await this.writeJson(cacheKey, newPayload);
 
         return newPayload.body;
       }
 
-      localStorage.removeItem(cacheKey);
+      await Storage.remove({ key: cacheKey });
       return;
     }
 
     return payload.body;
   }
 
-  public clear() {
-    for (var i = localStorage.length - 1; i >= 0; i--) {
-      if (localStorage.key(i).startsWith(keyPrefix)) {
-        localStorage.removeItem(localStorage.key(i));
+  public async clear() {
+    const storage = await Storage.keys();
+    storage.keys.forEach(key => {
+      if (key.startsWith(keyPrefix)) {
+        Storage.remove({ key });
       }
-    }
+    });
   }
 
   /**
    * Retrieves data from local storage and parses it into the correct format
    * @param cacheKey The cache key
    */
-  private readJson(cacheKey: string): CachePayload {
-    const json = window.localStorage.getItem(cacheKey);
-    let payload;
+  private async readJson(cacheKey: string): Promise<CachePayload> {
+    const storage = await Storage.get({ key: cacheKey });
 
-    if (!json) {
+    if (!storage || !storage.value) {
       return;
     }
 
-    payload = JSON.parse(json);
-
-    if (!payload) {
-      return;
-    }
-
-    return payload;
+    return JSON.parse(storage.value);
   }
 
   /**
@@ -120,8 +122,8 @@ export class LocalStorageCache implements ICache {
    * @param cacheKey The cache key
    * @param payload The payload to write as JSON
    */
-  private writeJson(cacheKey: string, payload: CachePayload) {
-    localStorage.setItem(cacheKey, JSON.stringify(payload));
+  private async writeJson(cacheKey: string, payload: CachePayload) {
+    await Storage.set({ key: cacheKey, value: JSON.stringify(payload) });
   }
 
   /**
@@ -138,58 +140,4 @@ export class LocalStorageCache implements ICache {
 
     return strippedPayload;
   }
-}
-
-export class InMemoryCache {
-  public enclosedCache: ICache = (function () {
-    let cache: CachePayload = {
-      body: {},
-      expiresAt: 0
-    };
-
-    return {
-      save(entry: CacheEntry) {
-        const key = createKey(entry);
-        const payload = wrapCacheEntry(entry);
-
-        cache[key] = payload;
-      },
-
-      get(
-        key: CacheKeyData,
-        expiryAdjustmentSeconds = DEFAULT_EXPIRY_ADJUSTMENT_SECONDS
-      ) {
-        const cacheKey = createKey(key);
-        const wrappedEntry: CachePayload = cache[cacheKey];
-        const nowSeconds = Math.floor(Date.now() / 1000);
-
-        if (!wrappedEntry) {
-          return;
-        }
-
-        if (wrappedEntry.expiresAt - expiryAdjustmentSeconds < nowSeconds) {
-          if (wrappedEntry.body.refresh_token) {
-            wrappedEntry.body = {
-              refresh_token: wrappedEntry.body.refresh_token
-            };
-
-            return wrappedEntry.body;
-          }
-
-          delete cache[cacheKey];
-
-          return;
-        }
-
-        return wrappedEntry.body;
-      },
-
-      clear() {
-        cache = {
-          body: {},
-          expiresAt: 0
-        };
-      }
-    };
-  })();
 }
