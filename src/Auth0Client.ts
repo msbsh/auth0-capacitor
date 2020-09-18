@@ -604,4 +604,8 @@ export default class Auth0Client {
       audience: options.audience || 'default'
     };
   }
+
+  async init() {
+    await this.transactionManager.init();
+  }
 }
